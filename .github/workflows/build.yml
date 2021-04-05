@@ -1,0 +1,47 @@
+name: Build
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+        node-version: [14]
+    steps:
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v2
+      - uses: actions/checkout@v2.3.1
+      - uses: actions/setup-node@v2.1.2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install Linux deps
+        if: ${{ runner.os == 'Linux' }}
+        run: sudo apt update && sudo apt install libglu1-mesa-dev libpulse-dev mesa-common-dev libxkbcommon-x11-0 -y
+      - name: Install node packages
+        run: npm ci
+      - name: Build
+        run: npm run build && npm run release
+
+      - name: Zip Windows
+        if: ${{ runner.os == 'Windows' }}
+        run: |
+          cd deploy\win32\build\
+          tar -cf exorcism-x86_64-windows.zip exorcism\*
+          cd ..\..\..
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body: TODO add changelogs
+          draft: true
+          files: |
+            deploy/win32/build/exorcism-x86_64-windows.zip
+            deploy/linux/build/exorcism/exorcism-x86_64.AppImage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

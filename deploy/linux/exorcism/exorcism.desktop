@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=exorcism
+Exec=AppRun %F
+Icon=exorcism
+Comment=exorcism allows you to create cursed videos
+Terminal=true
+Categories=Utility;
